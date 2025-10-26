@@ -42,6 +42,17 @@
 <body class="pastel-bg min-h-full">
     <div class="container mx-auto px-4 py-8 max-w-6xl">
         <header class="text-center mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <a 
+                    href="https://nckhthptnk.github.io/minitkb/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    class="px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl font-medium btn-hover transition-all duration-200 flex items-center text-sm"
+                >
+                    🏠 Về Trang Chủ
+                </a>
+                <div class="flex-1"></div>
+            </div>
             <h1 class="text-3xl font-bold text-purple-700 mb-2">📚 QUẢN LÝ LỊCH THI - KIỂM TRA</h1>
             <p class="text-purple-500 font-light">Theo dõi và quản lý lịch thi một cách dễ dàng</p>
         </header>
@@ -132,10 +143,18 @@
 
             <!-- Danh sách lịch thi -->
             <div class="bg-gradient-to-br from-blue-50 to-green-50 rounded-2xl card-shadow p-6 border border-blue-100">
-                <h2 class="text-xl font-medium text-blue-700 mb-6 flex items-center">
-                    <span class="mr-2">📋</span>
-                    Danh Sách Lịch Thi
-                </h2>
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
+                    <h2 class="text-xl font-medium text-blue-700 flex items-center mb-4 md:mb-0">
+                        <span class="mr-2">📋</span>
+                        Danh Sách Lịch Thi
+                    </h2>
+                    <button 
+                        onclick="exportToPrint()" 
+                        class="px-6 py-2 bg-gradient-to-r from-green-400 to-blue-400 text-white rounded-xl font-medium btn-hover transition-all duration-200 flex items-center"
+                    >
+                        🖨️ Xuất Màn Hình
+                    </button>
+                </div>
                 
                 <div id="examList" class="space-y-4">
                     <div class="text-center py-8 text-slate-400">
@@ -306,8 +325,179 @@
             }, 2000);
         }
 
+        // Xuất màn hình
+        function exportToPrint() {
+            if (exams.length === 0) {
+                showNotification('⚠️ Chưa có lịch thi nào để xuất!');
+                return;
+            }
+
+            // Tạo nội dung để in
+            const printContent = generatePrintContent();
+            
+            // Tạo cửa sổ mới để in
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            
+            // Tự động mở hộp thoại in
+            printWindow.onload = function() {
+                printWindow.print();
+            };
+            
+            showNotification('📄 Đã mở cửa sổ xuất màn hình!');
+        }
+
+        // Tạo nội dung để in
+        function generatePrintContent() {
+            const sortedExams = [...exams].sort((a, b) => {
+                const dateTimeA = new Date(`${a.date}T${a.time}`);
+                const dateTimeB = new Date(`${b.date}T${b.time}`);
+                return dateTimeA - dateTimeB;
+            });
+
+            const examRows = sortedExams.map((exam, index) => {
+                const examDate = new Date(`${exam.date}T${exam.time}`);
+                const now = new Date();
+                const status = examDate > now ? 'Sắp tới' : examDate < now ? 'Đã qua' : 'Hôm nay';
+                
+                return `
+                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                        <td style="padding: 12px; text-align: center; font-weight: bold;">${index + 1}</td>
+                        <td style="padding: 12px; font-weight: 600;">${exam.subject}</td>
+                        <td style="padding: 12px; text-align: center;">${formatDate(exam.date)}</td>
+                        <td style="padding: 12px; text-align: center; font-weight: 600;">${exam.time}</td>
+                        <td style="padding: 12px; text-align: center;">${exam.room}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            <span style="padding: 4px 8px; border-radius: 12px; font-size: 12px; 
+                                ${status === 'Sắp tới' ? 'background-color: #dcfce7; color: #166534;' : 
+                                  status === 'Đã qua' ? 'background-color: #f3f4f6; color: #6b7280;' : 
+                                  'background-color: #fef3c7; color: #92400e;'}">${status}</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            return `
+                <!DOCTYPE html>
+                <html lang="vi">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Lịch Thi Kiểm Tra</title>
+                    <style>
+                        body {
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            margin: 20px;
+                            color: #333;
+                            line-height: 1.6;
+                        }
+                        .header {
+                            text-align: center;
+                            margin-bottom: 30px;
+                            border-bottom: 3px solid #8b5cf6;
+                            padding-bottom: 20px;
+                        }
+                        .header h1 {
+                            color: #8b5cf6;
+                            margin: 0;
+                            font-size: 28px;
+                            font-weight: bold;
+                        }
+                        .header p {
+                            color: #6b7280;
+                            margin: 10px 0 0 0;
+                            font-size: 16px;
+                        }
+                        .info {
+                            display: flex;
+                            justify-content: space-between;
+                            margin-bottom: 20px;
+                            font-size: 14px;
+                            color: #6b7280;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 20px;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                        }
+                        th {
+                            background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+                            color: white;
+                            padding: 15px 12px;
+                            text-align: center;
+                            font-weight: 600;
+                            font-size: 14px;
+                        }
+                        td {
+                            font-size: 14px;
+                        }
+                        tr:nth-child(even) {
+                            background-color: #f8fafc;
+                        }
+                        tr:hover {
+                            background-color: #f1f5f9;
+                        }
+                        .footer {
+                            margin-top: 30px;
+                            text-align: center;
+                            font-size: 12px;
+                            color: #9ca3af;
+                            border-top: 1px solid #e5e7eb;
+                            padding-top: 20px;
+                        }
+                        @media print {
+                            body { margin: 0; }
+                            .header { page-break-inside: avoid; }
+                            table { page-break-inside: auto; }
+                            tr { page-break-inside: avoid; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>📚 LỊCH THI - KIỂM TRA</h1>
+                        <p>Danh sách lịch thi được xuất từ hệ thống quản lý</p>
+                    </div>
+                    
+                    <div class="info">
+                        <span>📅 Ngày xuất: ${new Date().toLocaleDateString('vi-VN', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })}</span>
+                        <span>📊 Tổng số lịch thi: ${exams.length}</span>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 8%;">STT</th>
+                                <th style="width: 25%;">Môn Kiểm Tra</th>
+                                <th style="width: 25%;">Ngày Thi</th>
+                                <th style="width: 12%;">Giờ Thi</th>
+                                <th style="width: 15%;">Phòng Thi</th>
+                                <th style="width: 15%;">Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${examRows}
+                        </tbody>
+                    </table>
+
+                    <div class="footer">
+                        <p>🎓 Hệ thống quản lý lịch thi - Được tạo bởi Canva Code</p>
+                        <p>Thời gian xuất: ${new Date().toLocaleString('vi-VN')}</p>
+                    </div>
+                </body>
+                </html>
+            `;
+        }
+
         // Khởi tạo
         renderExamList();
     </script>
 </</body>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'994ad7e5a2969626',t:'MTc2MTQ5MTAzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></html>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'994af41f84d79626',t:'MTc2MTQ5MjE5My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></html>
